@@ -48,8 +48,6 @@ export default function prathamesh_mutkure(api: API, outputApi: OutputAPI) {
   //     b) older than the currently finalized block.
 
   const onNewBlock = ({ blockHash, parent }: NewBlockEvent) => {
-    console.log("New block", blockHash)
-
     if (!lastFinalisedBlock) {
       lastFinalisedBlock = parent
     }
@@ -66,6 +64,10 @@ export default function prathamesh_mutkure(api: API, outputApi: OutputAPI) {
       const body = api.getBody(blockHash)
 
       for (let txn in allTransactions) {
+        if (!isNaN(Number(txn))) {
+          continue
+        }
+
         const isTxnPresentInBody = body.includes(txn)
 
         if (isTxnPresentInBody) {
@@ -93,8 +95,16 @@ export default function prathamesh_mutkure(api: API, outputApi: OutputAPI) {
           // No
 
           // Is it valid in this block?
-          const isTxValidInThisBlock = api.isTxValid(blockHash, txn)
-          const isTxnSuccessful = api.isTxSuccessful(blockHash, txn)
+
+          let isTxValidInThisBlock = false
+          try {
+            isTxValidInThisBlock = api.isTxValid(blockHash, txn)
+          } catch {
+            console.log("WTF!", txn)
+            throw new Error("WTF!")
+          }
+          // const isTxValidInThisBlock = false
+          const isTxnSuccessful = false
 
           if (isTxValidInThisBlock) {
             // Yes
@@ -126,7 +136,7 @@ export default function prathamesh_mutkure(api: API, outputApi: OutputAPI) {
   }
 
   const onNewTx = ({ value: transaction }: NewTransactionEvent) => {
-    allTransactions.push(transaction)
+    allTransactions.push(transaction.toString())
   }
 
   function getAllDescendants(
@@ -157,8 +167,6 @@ export default function prathamesh_mutkure(api: API, outputApi: OutputAPI) {
   }
 
   const onFinalized = ({ blockHash }: FinalizedEvent) => {
-    console.log("Finalized", blockHash)
-
     const finalisedBlocks = getAllDescendants(
       settledBlocks,
       blockHash,
