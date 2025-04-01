@@ -16,5 +16,8 @@
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "graph-data-structure": "^4.5.0"
   }
 }
